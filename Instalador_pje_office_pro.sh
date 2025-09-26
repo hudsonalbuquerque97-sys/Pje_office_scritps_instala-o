@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#
+# Instalação do PJe Office Pro 2.5.16u com atalho e ícone
+#
+
 set -e
 
 PJE_URL="https://pje-office.pje.jus.br/pro/pjeoffice-pro-v2.5.16u-linux_x64.zip"
@@ -6,44 +10,68 @@ ICON_URL="https://oabsc.s3.sa-east-1.amazonaws.com/images/201907301559070.jpg"
 DEST_DIR="/usr/share/pjeoffice-pro"
 ICON_FILE="$DEST_DIR/pjeoffice-icon.jpg"
 DESKTOP_FILE="/usr/share/applications/pjeoffice-pro.desktop"
+USER_DESKTOP="$HOME/Área de Trabalho/pjeoffice-pro.desktop"
 
 echo "==> Baixando PJe Office Pro..."
 wget -c "$PJE_URL" -O /tmp/pjeoffice-pro.zip
 
 echo "==> Criando diretório destino $DEST_DIR..."
-sudo mkdir -p "$DEST_DIR"
+mkdir -p "$DEST_DIR"
 
 echo "==> Extraindo pacote..."
-sudo unzip -o /tmp/pjeoffice-pro.zip -d "$DEST_DIR"
+unzip -o /tmp/pjeoffice-pro.zip -d "$DEST_DIR"
+
+echo "==> Localizando arquivo executável real..."
+PJE_SH=$(find "$DEST_DIR" -type f -name "pjeoffice-pro.sh" | head -n 1)
+
+if [ -z "$PJE_SH" ]; then
+    echo "Erro: não foi possível localizar pjeoffice-pro.sh dentro de $DEST_DIR"
+    exit 1
+fi
+echo "Executável encontrado em: $PJE_SH"
+
+echo "==> Ajustando permissões de execução..."
+chmod +x "$PJE_SH"
 
 echo "==> Baixando ícone..."
-sudo wget -c "$ICON_URL" -O "$ICON_FILE"
+wget -c "$ICON_URL" -O "$ICON_FILE"
 
-echo "==> Ajustando permissões..."
-sudo chmod +x "$DEST_DIR/pjeoffice-pro.sh"
+# --- Parte final: renomear a pasta e criar o atalho ---
+ORIG_DESKTOP="$HOME/Área de Trabalho"
+NEW_DESKTOP="$HOME/Desktop"
 
-echo "==> Criando arquivo .desktop..."
-sudo tee "$DESKTOP_FILE" >/dev/null <<EOF
+# Renomeia a pasta se existir
+if [ -d "$ORIG_DESKTOP" ]; then
+    mv "$ORIG_DESKTOP" "$NEW_DESKTOP"
+    echo "Pasta renomeada de 'Área de Trabalho' para 'Desktop'."
+fi
+
+# Cria o atalho na nova pasta Desktop
+if [ -d "$NEW_DESKTOP" ]; then
+    DESKTOP_FILE_PATH="$NEW_DESKTOP/pjeoffice-pro.desktop"
+
+    cat > "$DESKTOP_FILE_PATH" <<EOF
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=PJe Office Pro
 Comment=Carregador de Certificados
-Exec=$DEST_DIR/pjeoffice-pro.sh
-Icon=$ICON_FILE
+Exec=/usr/share/pjeoffice-pro/pjeoffice-pro/pjeoffice-pro.sh
+Icon=/usr/share/pjeoffice-pro/pje-office.jpg
 Categories=Office;
 StartupNotify=false
 Terminal=false
 EOF
 
-sudo chmod +x "$DESKTOP_FILE"
-
-# Copiar atalho para a Área de Trabalho usando XDG
-DESKTOP_PATH="$(xdg-user-dir DESKTOP)"
-if [ -d "$DESKTOP_PATH" ]; then
-    cp "$DESKTOP_FILE" "$DESKTOP_PATH/pjeoffice-pro.desktop"
-    chmod +x "$DESKTOP_PATH/pjeoffice-pro.desktop"
-    echo "==> Atalho criado em $DESKTOP_PATH"
+    chmod +x "$DESKTOP_FILE_PATH"
+    echo "==> Atalho criado em $NEW_DESKTOP"
 else
-    echo "==> Pasta de área de trabalho não encontrada."
+    echo "==> Pasta Desktop não encontrada. Atalho criado apenas no menu de aplicativos."
 fi
+
+echo
+echo "======================================================"
+echo "Instalação concluída!"
+echo "- Menu de aplicativos: PJe Office Pro"
+echo "- Executável usado: $PJE_SH"
+echo "======================================================"
