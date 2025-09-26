@@ -1,25 +1,33 @@
 #!/usr/bin/env bash
 #
-# Instalação do PJe Office Pro 2.5.16u no home (sem root)
+# Instalação híbrida do PJe Office Pro
+# Parte root para instalar, parte usuário para criar atalhos
 #
 
 set -e
 
-# URLs
+# URL do pacote
 PJE_URL="https://pje-office.pje.jus.br/pro/pjeoffice-pro-v2.5.16u-linux_x64.zip"
-ICON_URL="https://oabsc.s3.sa-east-1.amazonaws.com/images/201907301559070.jpg"
 
-# Diretórios no home
-DEST_DIR="$HOME/pjeoffice-pro"
-DESKTOP_DIR="$HOME/Desktop"
-MENU_DIR="$HOME/.local/share/applications"
+# Diretório de instalação (root)
+DEST_DIR="/usr/share/pjeoffice-pro"
 
-# Arquivos de atalho
-DESKTOP_FILE="$DESKTOP_DIR/pjeoffice-pro.desktop"
-MENU_FILE="$MENU_DIR/pjeoffice-pro.desktop"
+# Desktop e menu do usuário normal
+USER_DESKTOP="$HOME/Desktop"
+USER_MENU="$HOME/.local/share/applications"
 
-# Cria diretórios necessários
-mkdir -p "$DEST_DIR" "$DESKTOP_DIR" "$MENU_DIR"
+DESKTOP_FILE_NAME="pjeoffice-pro.desktop"
+DESKTOP_FILE_PATH="$USER_DESKTOP/$DESKTOP_FILE_NAME"
+MENU_FILE_PATH="$USER_MENU/$DESKTOP_FILE_NAME"
+
+# Verifica se está sendo rodado como root
+if [ "$EUID" -ne 0 ]; then
+    echo "Este script precisa ser executado como root para instalar o PJe Office Pro."
+    exit 1
+fi
+
+# Cria diretório de instalação
+mkdir -p "$DEST_DIR"
 
 echo "==> Baixando PJe Office Pro..."
 wget -c "$PJE_URL" -O /tmp/pjeoffice-pro.zip
@@ -34,29 +42,34 @@ if [ -z "$PJE_SH" ]; then
     exit 1
 fi
 
-# Localiza ícone no pacote ou baixa se não existir
+chmod +x "$PJE_SH"
+echo "Executável encontrado em: $PJE_SH"
+
+# Localiza ícone (ou baixa se não existir)
 ICON_FILE=$(find "$DEST_DIR" -type f -iname "*.png" -o -iname "*.jpg" | head -n 1)
 if [ -z "$ICON_FILE" ]; then
-    echo "Ícone não encontrado no pacote, baixando..."
     ICON_FILE="$DEST_DIR/pje-office.jpg"
-    wget -c "$ICON_URL" -O "$ICON_FILE"
+    wget -c "https://oabsc.s3.sa-east-1.amazonaws.com/images/201907301559070.jpg" -O "$ICON_FILE"
 fi
 
-# Ajusta permissões
-chmod -R 777 "$DEST_DIR"
-chmod 777 "$PJE_SH"
+# --- Parte do usuário normal ---
+# Usa su -c ou sudo -u para criar atalhos no home do usuário
+USER_NAME=$(logname)  # pega usuário que chamou sudo
 
-# Função para criar atalhos .desktop
+sudo -u "$USER_NAME" mkdir -p "$USER_DESKTOP" "$USER_MENU"
+
 create_desktop() {
     local FILE="$1"
+    local PJE_SH_PATH="$2"
+    local ICON_PATH="$3"
     cat > "$FILE" <<EOF
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=PJe Office Pro
 Comment=Carregador de Certificados
-Exec=$PJE_SH
-Icon=$ICON_FILE
+Exec=$PJE_SH_PATH
+Icon=$ICON_PATH
 Categories=Office;
 StartupNotify=false
 Terminal=false
@@ -64,16 +77,17 @@ EOF
     chmod 777 "$FILE"
 }
 
-echo "==> Criando atalhos..."
-create_desktop "$DESKTOP_FILE"
-create_desktop "$MENU_FILE"
+# Cria atalhos para o usuário
+sudo -u "$USER_NAME" bash -c "create_desktop \"$DESKTOP_FILE_PATH\" \"$PJE_SH\" \"$ICON_FILE\""
+sudo -u "$USER_NAME" bash -c "create_desktop \"$MENU_FILE_PATH\" \"$PJE_SH\" \"$ICON_FILE\""
 
 echo
 echo "======================================================"
 echo "Instalação concluída!"
 echo "- Executável: $PJE_SH"
-echo "- Atalhos criados:"
-echo "    Desktop: $DESKTOP_FILE"
-echo "    Menu:    $MENU_FILE"
+echo "- Atalhos criados para o usuário $USER_NAME:"
+echo "    Desktop: $DESKTOP_FILE_PATH"
+echo "    Menu:    $MENU_FILE_PATH"
 echo "======================================================"
+
 
