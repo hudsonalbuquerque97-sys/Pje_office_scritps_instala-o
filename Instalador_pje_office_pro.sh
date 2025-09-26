@@ -21,22 +21,17 @@ mkdir -p "$DEST_DIR"
 echo "==> Extraindo pacote..."
 unzip -o /tmp/pjeoffice-pro.zip -d "$DEST_DIR"
 
-echo "==> Verificando criação do pjeoffice-pro.sh..."
-# Espera até 10 segundos o arquivo surgir após a extração
-for i in {1..10}; do
-    if [ -f "$DEST_DIR/pjeoffice-pro.sh" ]; then
-        echo "Arquivo encontrado!"
-        sudo chmod +x "$DEST_DIR/pjeoffice-pro.sh"
-        break
-    fi
-    sleep 1
-done
+echo "==> Localizando arquivo executável real..."
+PJE_SH=$(find "$DEST_DIR" -type f -name "pjeoffice-pro.sh" | head -n 1)
 
-# Se mesmo assim não encontrou, aborta
-if [ ! -x "$DEST_DIR/pjeoffice-pro.sh" ]; then
-    echo "Erro: pjeoffice-pro.sh não encontrado em $DEST_DIR"
+if [ -z "$PJE_SH" ]; then
+    echo "Erro: não foi possível localizar pjeoffice-pro.sh dentro de $DEST_DIR"
     exit 1
 fi
+echo "Executável encontrado em: $PJE_SH"
+
+echo "==> Ajustando permissões de execução..."
+chmod +x "$PJE_SH"
 
 echo "==> Baixando ícone..."
 wget -c "$ICON_URL" -O "$ICON_FILE"
@@ -48,7 +43,7 @@ Version=1.0
 Type=Application
 Name=PJe Office Pro
 Comment=Carregador de Certificados
-Exec=$DEST_DIR/pjeoffice-pro.sh
+Exec=$PJE_SH
 Icon=$ICON_FILE
 Categories=Office;
 StartupNotify=false
@@ -57,7 +52,6 @@ EOF
 
 chmod +x "$DESKTOP_FILE"
 
-# Copiar atalho para a Área de Trabalho, se a pasta existir
 if [ -d "$HOME/Área de Trabalho" ]; then
     cp "$DESKTOP_FILE" "$USER_DESKTOP"
     chmod +x "$USER_DESKTOP"
@@ -68,7 +62,7 @@ echo
 echo "======================================================"
 echo "Instalação concluída!"
 echo "- Menu de aplicativos: PJe Office Pro"
-echo "- Ícone: $ICON_FILE"
-echo "- Atalho criado na Área de Trabalho (se a pasta existir)."
+echo "- Executável usado: $PJE_SH"
 echo "======================================================"
+
 
