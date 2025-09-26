@@ -21,12 +21,20 @@ mkdir -p "$DEST_DIR"
 echo "==> Extraindo pacote..."
 unzip -o /tmp/pjeoffice-pro.zip -d "$DEST_DIR"
 
-# Verifica se o arquivo .sh existe antes de dar permissão
-if [ -f "$DEST_DIR/pjeoffice-pro.sh" ]; then
-    echo "==> Ajustando permissões de execução..."
-    chmod +x "$DEST_DIR/pjeoffice-pro.sh"
-else
-    echo "Erro: arquivo pjeoffice-pro.sh não encontrado em $DEST_DIR"
+echo "==> Verificando criação do pjeoffice-pro.sh..."
+# Espera até 10 segundos o arquivo surgir após a extração
+for i in {1..10}; do
+    if [ -f "$DEST_DIR/pjeoffice-pro.sh" ]; then
+        echo "Arquivo encontrado!"
+        sudo chmod +x "$DEST_DIR/pjeoffice-pro.sh"
+        break
+    fi
+    sleep 1
+done
+
+# Se mesmo assim não encontrou, aborta
+if [ ! -x "$DEST_DIR/pjeoffice-pro.sh" ]; then
+    echo "Erro: pjeoffice-pro.sh não encontrado em $DEST_DIR"
     exit 1
 fi
 
@@ -63,3 +71,4 @@ echo "- Menu de aplicativos: PJe Office Pro"
 echo "- Ícone: $ICON_FILE"
 echo "- Atalho criado na Área de Trabalho (se a pasta existir)."
 echo "======================================================"
+
