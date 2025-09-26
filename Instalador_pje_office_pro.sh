@@ -3,12 +3,12 @@
 # Instalação do PJe Office Pro 2.5.16u com atalho e ícone (no home)
 #
 
-set -e
+set -euo pipefail
 
 PJE_URL="https://pje-office.pje.jus.br/pro/pjeoffice-pro-v2.5.16u-linux_x64.zip"
-ICON_URL="https://oabsc.s3.sa-east-1.amazonaws.com/images/201907301559070.jpg"
+ICON_URL="https://upload.wikimedia.org/wikipedia/commons/4/44/Icon_document-png.png" # PNG compatível
 DEST_DIR="$HOME/pjeoffice-pro"
-ICON_FILE="$DEST_DIR/pje-office.jpg"
+ICON_FILE="$DEST_DIR/pje-office.png"
 
 # Diretórios de atalho
 DESKTOP_DIR="$HOME/Desktop"
@@ -27,7 +27,7 @@ echo "==> Extraindo pacote..."
 unzip -o /tmp/pjeoffice-pro.zip -d "$DEST_DIR"
 
 # Localiza executável
-PJE_SH=$(find "$DEST_DIR" -type f -name "pjeoffice-pro.sh" | head -n 1)
+PJE_SH=$(find "$DEST_DIR" -type f -name "pjeoffice-pro.sh" | head -n 1 || true)
 
 if [ -z "$PJE_SH" ]; then
     echo "Erro: não foi possível localizar pjeoffice-pro.sh dentro de $DEST_DIR"
@@ -39,7 +39,7 @@ echo "Executável encontrado em: $PJE_SH"
 echo "==> Ajustando permissões de execução..."
 chmod +x "$PJE_SH"
 
-echo "==> Baixando ícone..."
+echo "==> Baixando ícone compatível..."
 wget -c "$ICON_URL" -O "$ICON_FILE"
 
 # --- Cria arquivo .desktop ---
