@@ -6,7 +6,7 @@
 set -e
 
 PJE_URL="https://pje-office.pje.jus.br/pro/pjeoffice-pro-v2.5.16u-linux_x64.zip"
-ICON_URL="https://www.trt13.jus.br/informe-se/noticias/2017/04/usuarios-externos-podem-participar-da-homologacao-da-nova-versao-do-pje/pje-logo.png/@@images/image.png"
+ICON_URL="https://ekccopwh4gz.exactdn.com/wp-content/uploads/2019/03/pje.png?lossy=1&w=2560&ssl=1"
 DEST_DIR="/usr/share/pjeoffice-pro"
 ICON_FILE="$DEST_DIR/pjeoffice-icon.png"
 DESKTOP_FILE="/usr/share/applications/pjeoffice-pro.desktop"
