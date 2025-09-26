@@ -6,9 +6,9 @@
 set -e
 
 PJE_URL="https://pje-office.pje.jus.br/pro/pjeoffice-pro-v2.5.16u-linux_x64.zip"
-ICON_URL="https://oabsc.s3.sa-east-1.amazonaws.com/images/201907301559070.jpg"
+ICON_URL="https://www.trt13.jus.br/informe-se/noticias/2017/04/usuarios-externos-podem-participar-da-homologacao-da-nova-versao-do-pje/pje-logo.png/@@images/image.png"
 DEST_DIR="/usr/share/pjeoffice-pro"
-ICON_FILE="$DEST_DIR/pjeoffice-icon.jpg"
+ICON_FILE="$DEST_DIR/pjeoffice-icon.png"
 DESKTOP_FILE="/usr/share/applications/pjeoffice-pro.desktop"
 USER_DESKTOP="$HOME/Área de Trabalho/pjeoffice-pro.desktop"
 
@@ -37,8 +37,9 @@ echo "==> Baixando ícone..."
 wget -c "$ICON_URL" -O "$ICON_FILE"
 
 # --- Parte final: renomear a pasta e criar o atalho ---
-ORIG_DESKTOP="$HOME/Área de Trabalho"
-NEW_DESKTOP="$HOME/Desktop"
+USER_HOME=$(eval echo "~$SUDO_USER")
+ORIG_DESKTOP="$USER_HOME/Área de Trabalho"
+NEW_DESKTOP="$USER_HOME/Desktop"
 
 # Renomeia a pasta se existir
 if [ -d "$ORIG_DESKTOP" ]; then
@@ -57,7 +58,7 @@ Type=Application
 Name=PJe Office Pro
 Comment=Carregador de Certificados
 Exec=/usr/share/pjeoffice-pro/pjeoffice-pro/pjeoffice-pro.sh
-Icon=/usr/share/pjeoffice-pro/pje-office.jpg
+Icon=/usr/share/pjeoffice-pro/pje-office.png
 Categories=Office;
 StartupNotify=false
 Terminal=false
