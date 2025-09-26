@@ -1,21 +1,22 @@
 #!/usr/bin/env bash
 #
-# Instalação do PJe Office Pro 2.5.16u com atalho e ícone (no home)
+# Instalação do PJe Office Pro 2.5.16u no home (sem root)
 #
 
 set -e
 
+# URLs
 PJE_URL="https://pje-office.pje.jus.br/pro/pjeoffice-pro-v2.5.16u-linux_x64.zip"
 ICON_URL="https://oabsc.s3.sa-east-1.amazonaws.com/images/201907301559070.jpg"
-DEST_DIR="$HOME/pjeoffice-pro"
-ICON_FILE="$DEST_DIR/pje-office.jpg"
 
-# Diretórios de atalho
+# Diretórios no home
+DEST_DIR="$HOME/pjeoffice-pro"
 DESKTOP_DIR="$HOME/Desktop"
 MENU_DIR="$HOME/.local/share/applications"
-DESKTOP_FILE_NAME="pjeoffice-pro.desktop"
-DESKTOP_FILE_PATH="$DESKTOP_DIR/$DESKTOP_FILE_NAME"
-MENU_FILE_PATH="$MENU_DIR/$DESKTOP_FILE_NAME"
+
+# Arquivos de atalho
+DESKTOP_FILE="$DESKTOP_DIR/pjeoffice-pro.desktop"
+MENU_FILE="$MENU_DIR/pjeoffice-pro.desktop"
 
 # Cria diretórios necessários
 mkdir -p "$DEST_DIR" "$DESKTOP_DIR" "$MENU_DIR"
@@ -26,27 +27,28 @@ wget -c "$PJE_URL" -O /tmp/pjeoffice-pro.zip
 echo "==> Extraindo pacote..."
 unzip -o /tmp/pjeoffice-pro.zip -d "$DEST_DIR"
 
-# Ajusta permissões totais no diretório e no conteúdo
-chmod -R 777 "$DEST_DIR"
-
 # Localiza executável
-PJE_SH=$(find "$DEST_DIR" -type f -name "pjeoffice-pro.sh" | head -n 1)
-
+PJE_SH=$(find "$DEST_DIR" -type f -iname "pjeoffice-pro.sh" | head -n 1)
 if [ -z "$PJE_SH" ]; then
-    echo "Erro: não foi possível localizar pjeoffice-pro.sh dentro de $DEST_DIR"
+    echo "Erro: não foi possível localizar pjeoffice-pro.sh em $DEST_DIR"
     exit 1
 fi
 
-echo "Executável encontrado em: $PJE_SH"
+# Localiza ícone no pacote ou baixa se não existir
+ICON_FILE=$(find "$DEST_DIR" -type f -iname "*.png" -o -iname "*.jpg" | head -n 1)
+if [ -z "$ICON_FILE" ]; then
+    echo "Ícone não encontrado no pacote, baixando..."
+    ICON_FILE="$DEST_DIR/pje-office.jpg"
+    wget -c "$ICON_URL" -O "$ICON_FILE"
+fi
 
-# Garante permissões totais no executável
+# Ajusta permissões
+chmod -R 777 "$DEST_DIR"
 chmod 777 "$PJE_SH"
 
-echo "==> Baixando ícone..."
-wget -c "$ICON_URL" -O "$ICON_FILE"
-
-# --- Cria arquivo .desktop ---
-for FILE in "$DESKTOP_FILE_PATH" "$MENU_FILE_PATH"; do
+# Função para criar atalhos .desktop
+create_desktop() {
+    local FILE="$1"
     cat > "$FILE" <<EOF
 [Desktop Entry]
 Version=1.0
@@ -59,16 +61,19 @@ Categories=Office;
 StartupNotify=false
 Terminal=false
 EOF
-    # Garante permissões totais no atalho
     chmod 777 "$FILE"
-done
+}
 
-echo "==> Atalho criado em $DESKTOP_DIR e no menu de aplicativos"
+echo "==> Criando atalhos..."
+create_desktop "$DESKTOP_FILE"
+create_desktop "$MENU_FILE"
 
 echo
 echo "======================================================"
 echo "Instalação concluída!"
-echo "- Menu de aplicativos: PJe Office Pro"
-echo "- Executável usado: $PJE_SH"
-echo "- Atalho criado em: $DESKTOP_DIR"
+echo "- Executável: $PJE_SH"
+echo "- Atalhos criados:"
+echo "    Desktop: $DESKTOP_FILE"
+echo "    Menu:    $MENU_FILE"
 echo "======================================================"
+
