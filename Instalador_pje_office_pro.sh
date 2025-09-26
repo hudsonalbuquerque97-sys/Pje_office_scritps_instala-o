@@ -21,11 +21,17 @@ mkdir -p "$DEST_DIR"
 echo "==> Extraindo pacote..."
 unzip -o /tmp/pjeoffice-pro.zip -d "$DEST_DIR"
 
+# Verifica se o arquivo .sh existe antes de dar permissão
+if [ -f "$DEST_DIR/pjeoffice-pro.sh" ]; then
+    echo "==> Ajustando permissões de execução..."
+    chmod +x "$DEST_DIR/pjeoffice-pro.sh"
+else
+    echo "Erro: arquivo pjeoffice-pro.sh não encontrado em $DEST_DIR"
+    exit 1
+fi
+
 echo "==> Baixando ícone..."
 wget -c "$ICON_URL" -O "$ICON_FILE"
-
-echo "==> Ajustando permissões..."
-chmod +x "$DEST_DIR/pjeoffice-pro.sh"
 
 echo "==> Criando arquivo .desktop..."
 cat > "$DESKTOP_FILE" <<EOF
