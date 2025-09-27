@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+#
+# Configura PJe Office Pro no home do usuário
+#
+
+set -e
+
+# Diretórios
+PJE_DIR="$HOME/pjeoffice-pro"
+DESKTOP_DIR="$HOME/Desktop"
+DESKTOP_FILE="$DESKTOP_DIR/pjeoffice-pro.desktop"
+
+# URLs
+ICON_URL="https://oabsc.s3.sa-east-1.amazonaws.com/images/201907301559070.jpg"
+
+# Verifica se o PJe já foi baixado
+if [ ! -d "$PJE_DIR" ]; then
+    echo "Erro: PJe Office Pro não encontrado em $PJE_DIR"
+    echo "Execute primeiro o script de download e extração."
+    exit 1
+fi
+
+# Localiza executável
+PJE_SH=$(find "$PJE_DIR" -type f -iname "pjeoffice-pro.sh" | head -n 1)
+if [ -z "$PJE_SH" ]; then
+    echo "Erro: não foi possível localizar pjeoffice-pro.sh em $PJE_DIR"
+    exit 1
+fi
+
+echo "==> Ajustando permissão de execução no PJe..."
+chmod +x "$PJE_SH"
+
+# Baixa ícone
+ICON_FILE="$PJE_DIR/pje-office.png"
+echo "==> Baixando ícone..."
+wget -c "$ICON_URL" -O "$ICON_FILE"
+
+# Cria diretório Desktop se não existir
+mkdir -p "$DESKTOP_DIR"
+
+# Cria arquivo .desktop
+echo "==> Criando atalho no Desktop..."
+cat > "$DESKTOP_FILE" <<EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=PJe Office Pro
+Comment=Carregador de Certificados
+Exec=$PJE_SH
+Icon=$ICON_FILE
+Categories=Office;
+StartupNotify=false
+Terminal=false
+EOF
+
+# Dá permissão de execução no atalho
+chmod +x "$DESKTOP_FILE"
+
+echo
+echo "======================================================"
+echo "Configuração concluída!"
+echo "- Executável: $PJE_SH"
+echo "- Ícone: $ICON_FILE"
+echo "- Atalho criado no Desktop: $DESKTOP_FILE"
+echo "======================================================"
